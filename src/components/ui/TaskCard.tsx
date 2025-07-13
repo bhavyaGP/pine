@@ -4,6 +4,7 @@ interface Task {
   icon: string;
   platform: string;
   status: string;
+  message: string;
 }
 
 interface TaskCardProps {
@@ -19,6 +20,8 @@ export function TaskCard({ task }: TaskCardProps) {
         return 'bg-green-100 text-green-800';
       case 'open':
         return 'bg-gray-100 text-gray-800';
+      case 'available':
+        return 'bg-green-100 text-green-800';
       default:
         if (status.includes('$')) {
           return 'bg-purple-100 text-purple-800';
@@ -30,7 +33,7 @@ export function TaskCard({ task }: TaskCardProps) {
   return (
     <button
       className="group flex w-full items-center justify-between rounded-lg border border-gray-200 
-                bg-white p-4 transition-all duration-300 hover:shadow-lg hover:scale-[1.02]
+                bg-white p-4 transition-all duration-300 hover:shadow-lg hover:scale-[1.01]
                 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
     >
       <div className="flex items-center space-x-4">
@@ -46,12 +49,14 @@ export function TaskCard({ task }: TaskCardProps) {
           </p>
         </div>
       </div>
-      <span
-        className={`rounded-full px-3 py-1 text-xs font-medium transition-all duration-300 
-                       ${getStatusColor(task.status)} group-hover:shadow-sm`}
-      >
-        {task.status}
-      </span>
+      {task.status && (
+        <span
+          className={`rounded-full px-3 py-1 text-xs font-medium transition-all duration-300 
+                     ${getStatusColor(task.status)} group-hover:shadow-sm`}
+        >
+          {task.status}
+        </span>
+      )}
     </button>
   );
 }

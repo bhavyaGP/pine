@@ -1,6 +1,19 @@
 export function ChatTimeline() {
+  const steps = [
+    { status: 'complete', text: 'Thinking...', delay: 0 },
+    { status: 'complete', text: 'Searching company database', delay: 1000 },
+    { status: 'complete', text: 'Contacting support', delay: 2000 },
+    { status: 'current', text: 'Generating response', delay: 3000 },
+  ];
+
+  const supportLinks = [
+    { name: 'Amazon Help', url: '#' },
+    { name: 'IRS Support', url: '#' },
+    { name: 'Flipkart Returns', url: '#' },
+  ];
+
   return (
-    <div className="mt-8 space-y-4">
+    <div className="mt-8 space-y-4 animate-fadeIn">
       <div className="flex items-start space-x-3">
         <div className="flex h-8 w-8 items-center justify-center rounded-full bg-green-100">
           <span className="text-lg">🤖</span>
@@ -12,13 +25,15 @@ export function ChatTimeline() {
           
           {/* Timeline Steps */}
           <div className="mt-4 space-y-3">
-            {[
-              { status: 'complete', text: 'Thinking...' },
-              { status: 'complete', text: 'Searching company database' },
-              { status: 'current', text: 'Contacting support' },
-              { status: 'pending', text: 'Generating response' },
-            ].map((step, index) => (
-              <div key={index} className="flex items-center space-x-3">
+            {steps.map((step, index) => (
+              <div 
+                key={index} 
+                className="flex items-center space-x-3"
+                style={{ 
+                  opacity: 0,
+                  animation: `fadeIn 0.5s ease-out forwards ${step.delay}ms`
+                }}
+              >
                 <div
                   className={`h-2 w-2 rounded-full ${
                     step.status === 'complete'
@@ -40,16 +55,19 @@ export function ChatTimeline() {
           </div>
 
           {/* Support Links */}
-          <div className="mt-4 flex flex-wrap gap-2">
-            {[
-              { name: 'Amazon Help', url: '#' },
-              { name: 'IRS Support', url: '#' },
-              { name: 'Flipkart Returns', url: '#' },
-            ].map((link, index) => (
+          <div 
+            className="mt-4 flex flex-wrap gap-2"
+            style={{ 
+              opacity: 0,
+              animation: 'fadeIn 0.5s ease-out forwards 4000ms'
+            }}
+          >
+            {supportLinks.map((link, index) => (
               <a
                 key={index}
                 href={link.url}
-                className="rounded-full bg-gray-100 px-3 py-1 text-sm text-gray-600 hover:bg-gray-200"
+                className="rounded-full bg-gray-100 px-3 py-1 text-sm text-gray-600 hover:bg-gray-200 
+                         transition-colors duration-200"
               >
                 {link.name}
               </a>
