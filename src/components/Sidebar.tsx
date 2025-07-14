@@ -1,8 +1,11 @@
-import { useState } from 'react';
+"use client";
+
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { MagnifyingGlassIcon, PlusIcon } from '@heroicons/react/24/outline';
 import clsx from 'clsx';
+import { useTaskStore } from '@/store/taskStore';
 
 interface User {
   name: string;
@@ -12,11 +15,30 @@ interface User {
 
 export default function Sidebar() {
   const [isExpanded, setIsExpanded] = useState(true);
+  const [recentTasks, setRecentTasks] = useState<any[]>([]);
+  
   const user: User = {
     name: 'Bhavya',
     email: 'bhavya@example.com',
     avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Bhavya'
   };
+  
+  // Subscribe to task store changes
+  useEffect(() => {
+    // Initial load
+    const tasks = useTaskStore.getState().tasks['recommended'] || [];
+    setRecentTasks(tasks.slice(0, 5));
+    
+    // Subscribe to changes
+    const unsubscribe = useTaskStore.subscribe(
+      (state) => state.tasks['recommended'],
+      (tasks) => {
+        setRecentTasks((tasks || []).slice(0, 5));
+      }
+    );
+    
+    return () => unsubscribe();
+  }, []);
 
   return (
     <aside
@@ -33,8 +55,25 @@ export default function Sidebar() {
         )}
       </div>
 
-      {/* New Task Button */}
-      <button className="mx-4 mb-6 flex items-center justify-center bg-green-700 hover:bg-green-800 text-white rounded-lg py-2 px-4">
+          {/* New Task Button */}
+      <button 
+        onClick={() => {
+          // Get the current timestamp to create a unique ID
+          const taskId = Date.now();
+          // Add the task to the store
+          const addTask = useTaskStore.getState().addTask;
+          addTask('recommended', {
+            id: taskId,
+            title: 'New Task',
+            icon: '✨',
+            platform: 'Custom',
+            status: 'Open',
+            message: 'A new custom task',
+            createdAt: new Date()
+          });
+        }}
+        className="mx-4 mb-6 flex items-center justify-center bg-green-700 hover:bg-green-800 text-white rounded-lg py-2 px-4"
+      >
         <PlusIcon className="h-5 w-5" />
         {isExpanded && <span className="ml-2">New Task</span>}
       </button>
@@ -60,10 +99,21 @@ export default function Sidebar() {
           <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">
             Recent
           </h3>
-          <Link href="#" className="flex items-center p-2 text-gray-700 rounded-lg hover:bg-gray-50">
-            <div className="flex-shrink-0 w-2 h-2 rounded-full bg-green-500 mr-3" />
-            <span>New Task</span>
-          </Link>
+          {/* Display recent tasks */}
+          {recentTasks.length > 0 ? (
+            recentTasks.map((task) => (
+              <Link 
+                key={task.id} 
+                href="#" 
+                className="flex items-center p-2 text-gray-700 rounded-lg hover:bg-gray-50 mb-1"
+              >
+                <div className="flex-shrink-0 w-2 h-2 rounded-full bg-green-500 mr-3" />
+                <span>{task.title}</span>
+              </Link>
+            ))
+          ) : (
+            <p className="text-sm text-gray-500 p-2">No recent tasks</p>
+          )}
         </div>
       )}
 

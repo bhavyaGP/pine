@@ -1,10 +1,19 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { MagnifyingGlassIcon, PlusIcon } from '@heroicons/react/24/outline';
+import { 
+  MagnifyingGlassIcon, 
+  PlusIcon,
+  ChevronDownIcon,
+  UserCircleIcon,
+  CogIcon,
+  ArrowRightOnRectangleIcon
+} from '@heroicons/react/24/outline';
 import clsx from 'clsx';
+import { useTaskStore } from '@/store/taskStore';
+import { DateTime } from 'luxon';
 
 interface User {
   name: string;
@@ -14,64 +23,79 @@ interface User {
 
 export function Sidebar() {
   const [isExpanded, setIsExpanded] = useState(true);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [recentTasks] = useState([
-    { id: 1, title: 'Track Amazon Order', status: 'active' },
-    { id: 2, title: 'Netflix Subscription', status: 'completed' },
-  ]);
+  const [showDropdown, setShowDropdown] = useState(false);
+  const [showNewTaskModal, setShowNewTaskModal] = useState(false);
+  const [user, setUser] = useState<User | null>(null);
   
-  const user: User = {
-    name: 'Bhavya',
-    email: 'bhavya@example.com',
-    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Bhavya'
+  const recentTasks = useTaskStore(state => state.getRecentTasks());
+  const addTask = useTaskStore(state => state.addTask);
+
+  useEffect(() => {
+    // Set user data on client side only
+    setUser({
+      name: 'Bhavya',
+      email: 'bhavya@example.com',
+      avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Bhavya'
+    });
+  }, []);
+
+  const handleNewTask = () => {
+    const newTask = {
+      title: 'New Custom Task',
+      icon: '📝',
+      platform: 'Custom',
+      status: 'Open',
+      message: 'Custom task created by user',
+    };
+    addTask('other', newTask);
   };
+
+  const formatTimeAgo = (date: Date) => {
+    return DateTime.fromJSDate(date).toRelative();
+  };
+
+  // Avoid rendering user-specific content until user data is loaded
+  if (!user) {
+    return null;
+  }
 
   return (
     <aside
       className={clsx(
-        'bg-white border-r border-gray-200 flex flex-col transition-all duration-300',
+        'flex h-full flex-col border-r border-gray-200 bg-white transition-all duration-300',
         isExpanded ? 'w-64' : 'w-20'
       )}
     >
-      {/* Toggle Button */}
-      <button
-        onClick={() => setIsExpanded(!isExpanded)}
-        className="absolute -right-3 top-5 z-10 rounded-full border border-gray-200 bg-white p-1.5 shadow-sm hover:bg-gray-50"
-      >
-        <svg
-          className={`h-4 w-4 text-gray-400 transition-transform duration-300 ${
-            isExpanded ? 'rotate-180' : ''
-          }`}
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-        </svg>
-      </button>
       {/* Logo */}
-      <div className="p-4 flex items-center">
-        <Image src="/globe.svg" alt="Pine Logo" width={32} height={32} className="flex-shrink-0" />
+      <div className="flex items-center p-4">
+        <div className="relative h-8 w-8">
+          <Image src="/globe.svg" alt="Pine Logo" fill className="object-contain" />
+        </div>
         {isExpanded && (
           <span className="ml-3 text-xl font-semibold text-gray-900">pine</span>
         )}
       </div>
 
       {/* New Task Button */}
-      <button className="mx-4 mb-6 flex items-center justify-center bg-green-700 hover:bg-green-800 text-white rounded-lg py-2 px-4">
+      <button 
+        onClick={handleNewTask}
+        className="mx-4 mb-6 flex items-center justify-center rounded-lg bg-green-700 px-4 py-2 
+                 text-white transition-all duration-200 hover:bg-green-800 hover:shadow-md"
+      >
         <PlusIcon className="h-5 w-5" />
         {isExpanded && <span className="ml-2">New Task</span>}
       </button>
 
       {/* Search */}
-      <div className="px-4 mb-4">
+      <div className="px-4 mb-6">
         <div className="relative">
           <MagnifyingGlassIcon className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
           <input
             type="text"
             placeholder="Search tasks..."
             className={clsx(
-              'w-full bg-gray-50 rounded-lg pl-10 pr-4 py-2 text-sm text-gray-900 placeholder-gray-500',
+              'w-full rounded-lg bg-gray-50 pl-10 pr-4 py-2 text-sm text-gray-900',
+              'placeholder-gray-500 transition-all duration-200',
               'focus:outline-none focus:ring-2 focus:ring-green-500 focus:bg-white'
             )}
           />
@@ -80,47 +104,93 @@ export function Sidebar() {
 
       {/* Recent Section */}
       {isExpanded && (
-        <div className="px-4 mb-6 animate-slideDown">
-          <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">
+        <div className="px-4 mb-6 flex-1 overflow-y-auto">
+          <h3 className="mb-3 text-xs font-semibold uppercase tracking-wider text-gray-500">
             Recent
           </h3>
-          {recentTasks.map((task) => (
-            <Link
-              key={task.id}
-              href="#"
-              className="flex items-center p-2 text-gray-700 rounded-lg hover:bg-gray-50 group mb-1 transition-all duration-200"
-            >
-              <div
-                className={clsx(
-                  "flex-shrink-0 w-2 h-2 rounded-full mr-3",
-                  task.status === 'active' ? 'bg-green-500' : 'bg-gray-300'
-                )}
-              />
-              <span className="truncate group-hover:text-green-600 transition-colors duration-200">
-                {task.title}
-              </span>
-            </Link>
-          ))}
+          <div className="space-y-1">
+            {recentTasks.map((task) => (
+              <Link
+                key={task.id}
+                href="#"
+                className="group flex items-center justify-between rounded-lg p-2 hover:bg-gray-50"
+              >
+                <div className="flex items-center">
+                  <span className="mr-3">{task.icon}</span>
+                  <span className="text-sm text-gray-700 group-hover:text-green-600 
+                                 transition-colors duration-200">
+                    {task.title}
+                  </span>
+                </div>
+                <span className="text-xs text-gray-400">
+                  {formatTimeAgo(task.createdAt)}
+                </span>
+              </Link>
+            ))}
+          </div>
         </div>
       )}
 
       {/* User Profile */}
-      <div className="mt-auto p-4 border-t border-gray-200">
-        <div className="flex items-center">
-          <Image
-            src={user.avatar}
-            alt={user.name}
-            width={32}
-            height={32}
-            className="rounded-full"
-          />
+      <div className="relative border-t border-gray-200 p-4">
+        <button
+          onClick={() => setShowDropdown(!showDropdown)}
+          className="flex w-full items-center justify-between rounded-lg p-2 hover:bg-gray-50
+                    transition-colors duration-200"
+        >
+          <div className="flex items-center">
+            <Image
+              src={user.avatar}
+              alt={user.name}
+              width={32}
+              height={32}
+              className="rounded-full"
+            />
+            {isExpanded && (
+              <div className="ml-3 text-left">
+                <p className="text-sm font-medium text-gray-900">{user.name}</p>
+                <p className="text-xs text-gray-500">{user.email}</p>
+              </div>
+            )}
+          </div>
           {isExpanded && (
-            <div className="ml-3">
-              <p className="text-sm font-medium text-gray-900">{user.name}</p>
-              <p className="text-xs text-gray-500">{user.email}</p>
-            </div>
+            <ChevronDownIcon
+              className={`h-5 w-5 text-gray-400 transition-transform duration-200
+                         ${showDropdown ? 'rotate-180' : ''}`}
+            />
           )}
-        </div>
+        </button>
+
+        {/* Dropdown Menu */}
+        {showDropdown && isExpanded && (
+          <div className="absolute bottom-full left-0 mb-2 w-full animate-slideUp">
+            <div className="mx-4 rounded-lg bg-white shadow-lg ring-1 ring-black ring-opacity-5">
+              <div className="py-1">
+                <button
+                  className="flex w-full items-center px-4 py-2 text-sm text-gray-700 
+                            hover:bg-gray-100"
+                >
+                  <UserCircleIcon className="mr-3 h-5 w-5" />
+                  Profile
+                </button>
+                <button
+                  className="flex w-full items-center px-4 py-2 text-sm text-gray-700 
+                            hover:bg-gray-100"
+                >
+                  <CogIcon className="mr-3 h-5 w-5" />
+                  Settings
+                </button>
+                <button
+                  className="flex w-full items-center px-4 py-2 text-sm text-red-600 
+                            hover:bg-gray-100"
+                >
+                  <ArrowRightOnRectangleIcon className="mr-3 h-5 w-5" />
+                  Sign out
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </aside>
   );

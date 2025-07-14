@@ -1,15 +1,17 @@
 "use client";
 
-import { useState, FormEvent } from 'react';
+import { useState, FormEvent, useRef } from 'react';
 import { MicrophoneIcon, PaperClipIcon } from '@heroicons/react/24/outline';
 
 interface ChatInputProps {
-  onSend: (message: string) => void;
+  onSend: (message: string, attachment?: File) => void;
   isLoading?: boolean;
 }
 
 export function ChatInput({ onSend, isLoading = false }: ChatInputProps) {
   const [message, setMessage] = useState('');
+  const [isRecording, setIsRecording] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
@@ -19,60 +21,96 @@ export function ChatInput({ onSend, isLoading = false }: ChatInputProps) {
     }
   };
 
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      onSend(`Attached file: ${file.name}`, file);
+    }
+  };
+
+  const handleMicClick = async () => {
+    try {
+      if (!isRecording) {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        // Handle stream setup here
+        setIsRecording(true);
+      } else {
+        // Handle stop recording here
+        setIsRecording(false);
+      }
+    } catch (err) {
+      console.error('Microphone access denied:', err);
+    }
+  };
+
   return (
     <form 
       onSubmit={handleSubmit}
-      className="relative flex w-full animate-slideUp items-end space-x-2 rounded-lg border 
-                border-gray-200 bg-white p-4 shadow-lg transition-shadow duration-300 
+      className="border-t border-gray-200 bg-white p-4 shadow-lg transition-shadow duration-300 
                 hover:shadow-xl"
     >
       <div className="flex items-center gap-3">
+        <input
+          type="file"
+          ref={fileInputRef}
+          onChange={handleFileUpload}
+          className="hidden"
+          accept="image/*,.pdf,.doc,.docx"
+        />
+        
         <button
           type="button"
-          className="flex-shrink-0 text-gray-400 hover:text-gray-600"
+          onClick={() => fileInputRef.current?.click()}
+          className="flex-shrink-0 text-gray-400 hover:text-gray-600 transition-colors duration-200"
           aria-label="Attach file"
         >
           <PaperClipIcon className="h-5 w-5" />
         </button>
         
-        <textarea
+        <input
+          type="text"
           value={message}
           onChange={(e) => setMessage(e.target.value)}
-          placeholder="Type your message..."
-          rows={1}
-          className="flex-1 resize-none overflow-hidden rounded-lg border-0 bg-transparent p-2 
-                    text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-0"
-          style={{
-            minHeight: '24px',
-            maxHeight: '200px',
-          }}
+          placeholder="Type your question here..."
+          className="flex-1 rounded-lg border border-gray-300 px-4 py-2 text-sm 
+                    focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500
+                    placeholder-gray-500 transition-all duration-200"
         />
         
         <button
           type="button"
-          className="flex-shrink-0 text-gray-400 hover:text-gray-600"
+          onClick={handleMicClick}
+          className={`flex-shrink-0 transition-colors duration-200
+                     ${isRecording ? 'text-green-500' : 'text-gray-400 hover:text-gray-600'}`}
           aria-label="Voice input"
         >
-          <MicrophoneIcon className="h-5 w-5" />
+          <MicrophoneIcon className={`h-5 w-5 ${isRecording ? 'animate-pulse' : ''}`} />
         </button>
         
         <button
           type="submit"
           disabled={!message.trim() || isLoading}
-          className={`rounded-lg bg-green-500 px-4 py-2 text-white transition-all duration-300
+          className={`flex h-10 w-10 items-center justify-center rounded-full bg-green-600 
+                     text-white transition-all duration-300
                      ${message.trim() && !isLoading 
-                       ? 'hover:bg-green-600 hover:shadow-md' 
+                       ? 'hover:bg-green-700 hover:shadow-md' 
                        : 'cursor-not-allowed opacity-50'
                      }`}
+          aria-label="Send message"
         >
-          {isLoading ? (
-            <div className="flex items-center space-x-2">
-              <div className="h-4 w-4 animate-pulse rounded-full bg-white"></div>
-              <span>Sending...</span>
-            </div>
-          ) : (
-            'Send'
-          )}
+          <svg
+            className="h-5 w-5 rotate-90 transform"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"
+            />
+          </svg>
         </button>
       </div>
     </form>

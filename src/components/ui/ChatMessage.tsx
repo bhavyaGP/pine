@@ -10,14 +10,21 @@ interface ChatMessageProps {
 
 export function ChatMessage({ message, timestamp, isUser = false, animate = true }: ChatMessageProps) {
   const [isVisible, setIsVisible] = useState(!animate);
+  const [messageTime, setMessageTime] = useState(() => {
+    // Use UTC format for initial render to match server
+    return new Date(timestamp).toUTCString();
+  });
+
+  useEffect(() => {
+    // Format time on client side only
+    setMessageTime(DateTime.fromJSDate(timestamp).toLocaleString(DateTime.TIME_SIMPLE));
+  }, [timestamp]);
 
   useEffect(() => {
     if (animate) {
       setIsVisible(true);
     }
   }, [animate]);
-
-  const messageTime = DateTime.fromJSDate(timestamp).toLocaleString(DateTime.TIME_SIMPLE);
 
   return (
     <div
