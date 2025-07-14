@@ -95,22 +95,20 @@ export function TaskCategories() {
     return result;
   }, [storeTasks]);
 
-  const handleTaskClick = useCallback(async (task: Task) => {
-    try {
-      setIsLoading(true);
-      await addTask(activeTab, {
-        title: task.title,
-        icon: task.icon,
-        platform: task.platform,
-        status: 'Open',
-        message: task.message
-      });
-    } catch (error) {
-      console.error('Failed to add task:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [activeTab, addTask]);
+  // Open chat for agentic AI instead of adding another card
+  const { addChat, setActiveChat } = require('@/store/chatStore').useChatStore.getState();
+  const handleTaskClick = useCallback((task: Task) => {
+    setIsLoading(true);
+    // Create a new chat for this tool/task
+    const chatId = addChat({
+      title: task.title,
+      messages: [],
+      createdAt: new Date(),
+      taskId: task.id
+    });
+    setActiveChat(chatId);
+    setIsLoading(false);
+  }, [addChat, setActiveChat]);
 
   return (
     <div className="w-full space-y-6 max-w-full">

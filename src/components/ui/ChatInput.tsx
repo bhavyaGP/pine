@@ -6,9 +6,10 @@ import { MicrophoneIcon, PaperClipIcon } from '@heroicons/react/24/outline';
 interface ChatInputProps {
   onSend: (message: string, attachment?: File) => void;
   isLoading?: boolean;
+  funky?: boolean;
 }
 
-export function ChatInput({ onSend, isLoading = false }: ChatInputProps) {
+export function ChatInput({ onSend, isLoading = false, funky = false }: ChatInputProps) {
   const [message, setMessage] = useState('');
   const [isRecording, setIsRecording] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -46,10 +47,13 @@ export function ChatInput({ onSend, isLoading = false }: ChatInputProps) {
   return (
     <form 
       onSubmit={handleSubmit}
-      className="border-t border-gray-200 bg-white p-4 shadow-lg transition-shadow duration-300 
-                hover:shadow-xl"
+      className={funky
+        ? "border-none bg-gradient-to-r from-green-200 via-green-100 to-green-300 p-2 shadow-xl rounded-xl animate-funky"
+        : "border-t border-gray-200 bg-white p-4 shadow-lg transition-shadow duration-300 hover:shadow-xl"}
     >
-      <div className="flex items-center gap-3">
+      <div className={funky
+        ? "flex items-center gap-4"
+        : "flex items-center gap-3"}>
         <input
           type="file"
           ref={fileInputRef}
@@ -71,10 +75,10 @@ export function ChatInput({ onSend, isLoading = false }: ChatInputProps) {
           type="text"
           value={message}
           onChange={(e) => setMessage(e.target.value)}
-          placeholder="Type your question here..."
-          className="flex-1 rounded-lg border border-gray-300 px-4 py-2 text-sm 
-                    focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500
-                    placeholder-gray-500 transition-all duration-200"
+          placeholder={funky ? "Ask your AI agent anything..." : "Type your question here..."}
+          className={funky
+            ? "flex-1 rounded-xl border-none px-4 py-3 text-base bg-white/80 text-green-700 font-bold placeholder-green-400 focus:bg-white focus:ring-2 focus:ring-green-400 transition-all duration-200 shadow-md"
+            : "flex-1 rounded-lg border border-gray-300 px-4 py-2 text-sm focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500 placeholder-gray-500 transition-all duration-200"}
         />
         
         <button
